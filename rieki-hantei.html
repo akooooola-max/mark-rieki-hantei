@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARK 利益判定 — 電脳せどり</title>
+<style>
+  :root{
+    --paper:#f4f1ea; --surface:#fffdf8; --raise:#faf7f0;
+    --ink:#1c1f26; --muted:#6d6659; --faint:#948d7e;
+    --line:#e5dfd2; --line-strong:#d6cebd;
+    --accent:#a67723; --accent-soft:#efe4cb;
+    --good:#1d8a55; --good-bg:#e4f2e8; --good-line:#bfe0cd;
+    --warn:#c07d12; --warn-bg:#f7ecd7; --warn-line:#e6d3a8;
+    --bad:#bd4038; --bad-bg:#f6e2df; --bad-line:#eec4bf;
+    --shadow:0 1px 2px rgba(28,31,38,.05),0 8px 24px rgba(28,31,38,.06);
+    --sans:system-ui,-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Noto Sans JP",sans-serif;
+    --mono:"SF Mono",ui-monospace,"SFMono-Regular","Menlo","Consolas",monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#111318; --surface:#1a1d24; --raise:#20242c;
+      --ink:#eceef1; --muted:#9a9385; --faint:#736c5f;
+      --line:#2a2e37; --line-strong:#363b46;
+      --accent:#d7a848; --accent-soft:#33302a;
+      --good:#3bbd7e; --good-bg:#16271e; --good-line:#274a37;
+      --warn:#e0a63f; --warn-bg:#2a2214; --warn-line:#4d3c1c;
+      --bad:#e06a60; --bad-bg:#2c1917; --bad-line:#4e2a26;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#f4f1ea; --surface:#fffdf8; --raise:#faf7f0;
+    --ink:#1c1f26; --muted:#6d6659; --faint:#948d7e;
+    --line:#e5dfd2; --line-strong:#d6cebd;
+    --accent:#a67723; --accent-soft:#efe4cb;
+    --good:#1d8a55; --good-bg:#e4f2e8; --good-line:#bfe0cd;
+    --warn:#c07d12; --warn-bg:#f7ecd7; --warn-line:#e6d3a8;
+    --bad:#bd4038; --bad-bg:#f6e2df; --bad-line:#eec4bf;
+    --shadow:0 1px 2px rgba(28,31,38,.05),0 8px 24px rgba(28,31,38,.06);
+  }
+  :root[data-theme="dark"]{
+    --paper:#111318; --surface:#1a1d24; --raise:#20242c;
+    --ink:#eceef1; --muted:#9a9385; --faint:#736c5f;
+    --line:#2a2e37; --line-strong:#363b46;
+    --accent:#d7a848; --accent-soft:#33302a;
+    --good:#3bbd7e; --good-bg:#16271e; --good-line:#274a37;
+    --warn:#e0a63f; --warn-bg:#2a2214; --warn-line:#4d3c1c;
+    --bad:#e06a60; --bad-bg:#2c1917; --bad-line:#4e2a26;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper); color:var(--ink); font-family:var(--sans);
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+    padding:clamp(16px,4vw,40px);
+  }
+  .wrap{max-width:1000px;margin:0 auto}
+
+  header.top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:34px;height:34px;border-radius:8px;background:var(--ink);color:var(--paper);
+    display:grid;place-items:center;font-weight:800;font-size:16px;letter-spacing:.02em;flex:none}
+  .brand h1{font-size:19px;font-weight:750;margin:0;letter-spacing:.01em}
+  .brand .sub{color:var(--muted);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase}
+  .theme-btn{border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);
+    font:inherit;font-size:12.5px;padding:7px 12px;border-radius:999px;cursor:pointer}
+  .theme-btn:hover{color:var(--ink);border-color:var(--accent)}
+  .lead{color:var(--muted);font-size:13.5px;margin:0 0 22px;max-width:60ch}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:18px}
+  @media (min-width:840px){.grid{grid-template-columns:1.05fr .95fr;align-items:start}}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+  .panel{padding:20px clamp(16px,3vw,24px)}
+  .panel + .panel{border-top:1px solid var(--line)}
+  .eyebrow{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;margin:0 0 14px}
+
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:15px}
+  .field:last-child{margin-bottom:0}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  label{font-size:13px;font-weight:600;color:var(--ink)}
+  label .hint{font-weight:400;color:var(--faint);font-size:11.5px}
+  .inputwrap{position:relative;display:flex;align-items:center}
+  .inputwrap .yen{position:absolute;left:12px;color:var(--faint);font-family:var(--mono);font-size:14px;pointer-events:none}
+  input[type=text],input[type=number],select{
+    width:100%;font:inherit;color:var(--ink);background:var(--raise);
+    border:1px solid var(--line-strong);border-radius:10px;padding:11px 12px;}
+  input.money{font-family:var(--mono);font-size:16px;text-align:right;padding-left:30px;font-variant-numeric:tabular-nums}
+  input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  select{cursor:pointer;appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+
+  .seg{display:flex;gap:6px}
+  .seg button{flex:1;font:inherit;font-size:13px;font-weight:600;padding:10px;border-radius:10px;cursor:pointer;
+    border:1px solid var(--line-strong);background:var(--raise);color:var(--muted)}
+  .seg button[aria-pressed="true"]{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+  .seg.good button[aria-pressed="true"]{border-color:var(--good);background:var(--good-bg);color:var(--good)}
+  .seg.bad button[aria-pressed="true"]{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+
+  details.settings{margin-top:4px}
+  details.settings summary{cursor:pointer;color:var(--muted);font-size:12.5px;list-style:none;
+    display:flex;align-items:center;gap:6px;user-select:none}
+  details.settings summary::-webkit-details-marker{display:none}
+  details.settings summary::before{content:"▸";color:var(--faint);transition:transform .15s}
+  details.settings[open] summary::before{transform:rotate(90deg)}
+  .settings-body{margin-top:14px}
+
+  /* verdict */
+  .verdict{position:sticky;top:20px}
+  .verdict-head{padding:22px clamp(16px,3vw,24px);border-radius:16px 16px 0 0;
+    border-bottom:1px solid var(--line);transition:background .2s}
+  .verdict-label{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;opacity:.75;margin:0 0 8px}
+  .verdict-big{display:flex;align-items:baseline;gap:12px}
+  .verdict-big .mark{font-size:40px;font-weight:820;letter-spacing:.01em;line-height:1}
+  .verdict-big .note{font-size:13.5px;color:var(--muted)}
+  .v-go .verdict-head{background:var(--good-bg)} .v-go .mark{color:var(--good)}
+  .v-hold .verdict-head{background:var(--warn-bg)} .v-hold .mark{color:var(--warn)}
+  .v-no .verdict-head{background:var(--bad-bg)} .v-no .mark{color:var(--bad)}
+  .v-idle .mark{color:var(--faint)}
+
+  .stats{display:flex;flex-direction:column}
+  .stat{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .stat:last-child{border-bottom:none}
+  .stat .k{font-size:13px;color:var(--muted)}
+  .stat .v{font-family:var(--mono);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .stat .v.hero{font-size:20px}
+  .v.pos{color:var(--good)} .v.neg{color:var(--bad)}
+
+  .checks{display:flex;flex-direction:column;gap:9px}
+  .chk{display:flex;align-items:flex-start;gap:9px;font-size:13px}
+  .chk .ic{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;font-weight:800;margin-top:1px}
+  .chk.ok .ic{background:var(--good-bg);color:var(--good)}
+  .chk.soft .ic{background:var(--warn-bg);color:var(--warn)}
+  .chk.hard .ic{background:var(--bad-bg);color:var(--bad)}
+  .chk .txt{color:var(--ink)} .chk .txt b{font-weight:650}
+  .chk.ok .txt{color:var(--muted)}
+
+  footer.rules{margin-top:20px;padding:16px 18px;border:1px dashed var(--line-strong);border-radius:12px;
+    color:var(--muted);font-size:12.5px}
+  footer.rules b{color:var(--ink);font-weight:650}
+  footer.rules code{font-family:var(--mono);background:var(--raise);padding:1px 6px;border-radius:5px;color:var(--accent);font-size:12px}
+  .credit{margin-top:14px;text-align:center;color:var(--faint);font-size:11.5px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">M</div>
+      <div>
+        <h1>利益判定</h1>
+        <div class="sub">MARK · 電脳せどり</div>
+      </div>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button">◐ テーマ</button>
+  </header>
+  <p class="lead">売価と仕入値を入れると、MARKの鉄則（仕入 ≤ 売価×0.6 ／ Amazon本体不在 ／ 回転）で GO・保留・見送りを即判定します。</p>
+
+  <div class="grid">
+    <!-- INPUT -->
+    <section class="card" aria-label="入力">
+      <div class="panel">
+        <p class="eyebrow">仕入れ・販売</p>
+        <div class="field">
+          <label for="name">商品名 / ASIN <span class="hint">（メモ用・任意）</span></label>
+          <input type="text" id="name" placeholder="例：パナソニック ナノケア EH-NA9F">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="sell">Amazon売価</label>
+            <div class="inputwrap"><span class="yen">¥</span><input class="money" type="number" id="sell" inputmode="numeric" min="0" placeholder="0"></div>
+          </div>
+          <div class="field">
+            <label for="buy">仕入値</label>
+            <div class="inputwrap"><span class="yen">¥</span><input class="money" type="number" id="buy" inputmode="numeric" min="0" placeholder="0"></div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="fee">販売手数料</label>
+            <select id="fee">
+              <option value="15">家電・おもちゃ 15%</option>
+              <option value="10">一部カテゴリ 10%</option>
+              <option value="8">8%</option>
+              <option value="12">12%</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ship">送料・梱包 <span class="hint">¥</span></label>
+            <div class="inputwrap"><span class="yen">¥</span><input class="money" type="number" id="ship" inputmode="numeric" min="0" value="500"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="point">仕入のポイント還元 <span class="hint">%（楽天/Yahooせどり用・任意）</span></label>
+          <input type="number" id="point" inputmode="numeric" min="0" max="60" value="0">
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="eyebrow">Keepaチェック</p>
+        <div class="field">
+          <label>Amazon本体（カート保持）</label>
+          <div class="seg good" id="segAmazon" role="group" aria-label="Amazon本体の状態">
+            <button type="button" data-v="absent" aria-pressed="true">不在（在庫切れ）◎</button>
+            <button type="button" data-v="present" aria-pressed="false">常駐（相乗り不利）</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="rot">先月の販売数 <span class="hint">（Keepaの「先月の購入」＝回転）</span></label>
+          <input type="number" id="rot" inputmode="numeric" min="0" value="10">
+        </div>
+
+        <details class="settings">
+          <summary>合格基準を調整</summary>
+          <div class="settings-body">
+            <div class="row2">
+              <div class="field">
+                <label for="target">目標粗利 <span class="hint">¥以上</span></label>
+                <div class="inputwrap"><span class="yen">¥</span><input class="money" type="number" id="target" min="0" value="1000"></div>
+              </div>
+              <div class="field">
+                <label for="ratio">仕入比の上限 <span class="hint">仕入÷売価</span></label>
+                <input type="number" id="ratio" min="0.1" max="1" step="0.05" value="0.60">
+              </div>
+            </div>
+            <div class="field">
+              <label for="minrot">最低回転 <span class="hint">先月◯個以上</span></label>
+              <input type="number" id="minrot" min="0" value="5">
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- VERDICT -->
+    <section class="card verdict v-idle" id="verdict" aria-live="polite">
+      <div class="verdict-head">
+        <p class="verdict-label">総合判定</p>
+        <div class="verdict-big"><span class="mark" id="vMark">—</span><span class="note" id="vNote">売価と仕入値を入力</span></div>
+      </div>
+      <div class="panel">
+        <div class="stats">
+          <div class="stat"><span class="k">粗利（手残り − 実質仕入）</span><span class="v hero" id="oProfit">¥—</span></div>
+          <div class="stat"><span class="k">利益率</span><span class="v" id="oMargin">—</span></div>
+          <div class="stat"><span class="k">手残り（売価 − 手数料 − 送料）</span><span class="v" id="oNet">¥—</span></div>
+          <div class="stat"><span class="k">実質仕入（ポイント差引後）</span><span class="v" id="oBuy">¥—</span></div>
+          <div class="stat"><span class="k">仕入比（実質仕入 ÷ 売価）</span><span class="v" id="oRatio">—</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">判定の内訳</p>
+        <div class="checks" id="checks"><div class="chk ok"><span class="ic">·</span><span class="txt">入力待ち</span></div></div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="rules">
+    <b>MARKの鉄則</b>：セラーの相乗り売価を仕入れ基準にしない。現行定番は <code>仕入 ≤ 売価×0.6</code> が最低ライン。高いAmazon価格は「入手困難ゆえ高い」罠。Amazon本体がカートを持つ商品は避け、利益の源泉は店舗特価・卸・ポイント多重で作る。
+  </footer>
+  <p class="credit">MARK 内部ツール · オフライン動作 · ~/MARK/tools/</p>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var amazonState="absent";
+  var yen=function(n){var s=(n<0?"-":"")+"¥"+Math.abs(Math.round(n)).toLocaleString("ja-JP");return s};
+  var num=function(el){var v=parseFloat($(el).value);return isNaN(v)?0:v};
+
+  // Amazon segment toggle
+  Array.prototype.forEach.call($("segAmazon").querySelectorAll("button"),function(b){
+    b.addEventListener("click",function(){
+      amazonState=b.dataset.v;
+      Array.prototype.forEach.call($("segAmazon").querySelectorAll("button"),function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});
+      $("segAmazon").className="seg "+(amazonState==="absent"?"good":"bad");
+      calc();
+    });
+  });
+
+  function calc(){
+    var sell=num("sell"), buy=num("buy");
+    var feeRate=num("fee")/100, ship=num("ship"), point=num("point")/100;
+    var target=num("target"), maxRatio=num("ratio"), minRot=num("minrot"), rot=num("rot");
+    var v=$("verdict");
+
+    if(sell<=0||buy<=0){
+      v.className="card verdict v-idle";
+      $("vMark").textContent="—"; $("vNote").textContent="売価と仕入値を入力";
+      ["oProfit","oNet","oBuy"].forEach(function(x){$(x).textContent="¥—";$(x).className="v"+(x==="oProfit"?" hero":"")});
+      $("oMargin").textContent="—"; $("oRatio").textContent="—";
+      $("checks").innerHTML='<div class="chk ok"><span class="ic">·</span><span class="txt">入力待ち</span></div>';
+      return;
+    }
+
+    var fee=sell*feeRate;
+    var net=sell-fee-ship;               // 手残り
+    var realBuy=buy*(1-point);           // 実質仕入
+    var profit=net-realBuy;              // 粗利
+    var margin=profit/sell;
+    var ratio=realBuy/sell;
+
+    $("oProfit").textContent=yen(profit); $("oProfit").className="v hero "+(profit>=0?"pos":"neg");
+    $("oMargin").textContent=(margin*100).toFixed(1)+"%"; $("oMargin").className="v "+(profit>=0?"pos":"neg");
+    $("oNet").textContent=yen(net); $("oNet").className="v";
+    $("oBuy").textContent=yen(realBuy); $("oBuy").className="v";
+    $("oRatio").textContent=ratio.toFixed(2); $("oRatio").className="v "+(ratio<=maxRatio?"pos":"neg");
+
+    var checks=[];
+    // hard
+    var okProfit=profit>=target;
+    checks.push({t:"hard",ok:okProfit,label:okProfit?("粗利 "+yen(profit)+"（目標 "+yen(target)+" 以上）"):("粗利 "+yen(profit)+" が目標 "+yen(target)+" 未満")});
+    var okRatio=ratio<=maxRatio;
+    checks.push({t:"hard",ok:okRatio,label:okRatio?("仕入比 "+ratio.toFixed(2)+"（上限 "+maxRatio.toFixed(2)+" 以下）"):("仕入比 "+ratio.toFixed(2)+" が上限 "+maxRatio.toFixed(2)+" 超")});
+    // soft
+    var okAmazon=amazonState==="absent";
+    checks.push({t:"soft",ok:okAmazon,label:okAmazon?"Amazon本体が不在（相乗りできる）":"Amazon本体が常駐（カート取得が困難）"});
+    var okRot=rot>=minRot;
+    checks.push({t:"soft",ok:okRot,label:okRot?("回転あり（先月 "+rot+" 個）"):("回転が低い（先月 "+rot+" 個・最低 "+minRot+"）")});
+
+    var hardFail=checks.some(function(c){return c.t==="hard"&&!c.ok});
+    var softFail=checks.some(function(c){return c.t==="soft"&&!c.ok});
+    var verdict = hardFail?"見送り":(softFail?"保留":"GO");
+
+    v.className="card verdict "+(verdict==="GO"?"v-go":verdict==="保留"?"v-hold":"v-no");
+    $("vMark").textContent=verdict;
+    $("vNote").textContent = verdict==="GO" ? "全条件クリア。仕入れて出品" :
+                             verdict==="保留" ? "利益は出るが弱点あり。要確認" :
+                             "基準未達。この価格では仕入れない";
+
+    $("checks").innerHTML=checks.map(function(c){
+      var cls=c.ok?"ok":(c.t==="hard"?"hard":"soft");
+      var ic=c.ok?"✓":(c.t==="hard"?"✕":"!");
+      return '<div class="chk '+cls+'"><span class="ic">'+ic+'</span><span class="txt">'+c.label+'</span></div>';
+    }).join("");
+  }
+
+  // theme toggle (cycles: auto -> light -> dark)
+  var modes=["auto","light","dark"], mi=0;
+  $("themeBtn").addEventListener("click",function(){
+    mi=(mi+1)%3; var m=modes[mi];
+    if(m==="auto"){document.documentElement.removeAttribute("data-theme");this.textContent="◐ 自動"}
+    else{document.documentElement.setAttribute("data-theme",m);this.textContent=(m==="dark"?"● ダーク":"○ ライト")}
+  });
+
+  ["sell","buy","fee","ship","point","rot","target","ratio","minrot"].forEach(function(id){
+    $(id).addEventListener("input",calc); $(id).addEventListener("change",calc);
+  });
+  calc();
+})();
+</script>
+</body>
+</html>
